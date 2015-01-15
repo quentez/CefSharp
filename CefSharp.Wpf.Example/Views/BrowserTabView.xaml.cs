@@ -19,6 +19,18 @@ namespace CefSharp.Wpf.Example.Views
             browser.RegisterJsObject("bound", new BoundObject());
 
             browser.MenuHandler = new Handlers.MenuHandler();
+            browser.FrameLoadStart += (s, e) =>
+            {
+                Dispatcher.BeginInvoke(new Action(() => {
+                    var senderBrowser = s as ChromiumWebBrowser;
+                    if (senderBrowser == null)
+                    {
+                        return;
+                    }
+
+                    senderBrowser.ZoomLevel = Math.Log(1.75, 1.2);
+                }));
+            };
 
             CefExample.RegisterTestResources(browser);
         }
@@ -34,6 +46,5 @@ namespace CefSharp.Wpf.Example.Views
             var textBox = (TextBox)sender;
             textBox.SelectAll();
         }
-
     }
 }

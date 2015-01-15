@@ -223,25 +223,29 @@ namespace CefSharp.Wpf
         }
 
         public static readonly DependencyProperty ZoomLevelProperty =
-            DependencyProperty.Register("ZoomLevel", typeof(double), typeof(ChromiumWebBrowser),
-                                        new UIPropertyMetadata(0d, OnZoomLevelChanged));
-
+            DependencyProperty.Register("ZoomLevel", typeof(double), typeof(ChromiumWebBrowser), new UIPropertyMetadata(0d, OnZoomLevelChanged, OnCoerceZoomLevel));
+        
         private static void OnZoomLevelChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
         {
-            var owner = (ChromiumWebBrowser)sender;
-            var oldValue = (double)args.OldValue;
-            var newValue = (double)args.NewValue;
-
-            owner.OnZoomLevelChanged(oldValue, newValue);
+            //Set the zoom level in OnCoerceZoomLevel
+            //Setting the value will only trigger OnZoomLevelChanged when the dependency property changes.
+            //This will prevent zoom level from being set by OnFrameLoadStart and when rendering happens on anohter
+            //browser process than the one active when ZoomLevel was first set, ZoomLevel will not be appled
         }
-
+        
+        private static object OnCoerceZoomLevel(DependencyObject sender, object baseValue)
+        {
+            var owner = (ChromiumWebBrowser)sender;
+            owner.OnZoomLevelChanged(owner.ZoomLevel, (double)baseValue);
+            return (double)baseValue;
+        }
+        
         protected virtual void OnZoomLevelChanged(double oldValue, double newValue)
         {
             if (!Cef.IsInitialized)
             {
                 throw new InvalidOperationException("Cef::IsInitialized is false");
             }
-
             managedCefBrowserAdapter.SetZoomLevel(newValue);
         }
 
